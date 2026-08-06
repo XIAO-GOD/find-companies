@@ -16,7 +16,7 @@
 在 PowerShell 中运行：
 
 ```powershell
-gh repo clone XIAO-GOD/寻找公司 "$env:USERPROFILE\.codex\skills\prepare-hardtech-company-visit"
+gh repo clone XIAO-GOD/find-companies "$env:USERPROFILE\.codex\skills\prepare-hardtech-company-visit"
 ```
 
 重新打开 Codex，或启动一个新任务，让 Codex 重新发现本地 Skill。
