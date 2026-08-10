@@ -1,24 +1,36 @@
 # HTML renderer data contract
 
-Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`.
+Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`. Schema version 2 adds deterministic evidence and freshness gates.
 
 ## Top-level shape
 
 ```json
 {
+  "schema_version": 2,
   "meta": {
     "company_name": "示例科技",
     "legal_name": "示例科技有限公司",
-    "research_date": "2026-08-06",
-    "information_cutoff": "2026-08-06",
+    "research_date": "2026-08-10",
+    "information_cutoff": "2026-08-10",
     "visit_purpose": "一级投资人初步拜访",
     "identity_note": "已通过官网与公开注册信息交叉确认"
   },
+  "verification": {
+    "recent_search_completed": true,
+    "identity_cross_checked": true,
+    "critical_claims_cross_checked": 1,
+    "limitations": [
+      "公开信息不足以交叉验证三个关键现状判断，未验证内容已降级展示"
+    ]
+  },
   "executive_summary": [
     {
-      "text": "公司面向……提供……，目前处于客户验证阶段。",
+      "text": "截至2026年8月，公司产品处于客户验证阶段。",
       "evidence_status": "confirmed",
-      "source_ids": ["S01", "S03"]
+      "temporal_scope": "current",
+      "materiality": "critical",
+      "as_of": "2026-08-10",
+      "source_ids": ["S01", "S02"]
     }
   ],
   "profile": [
@@ -26,6 +38,9 @@ Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`.
       "label": "成立时间",
       "value": "2021年",
       "evidence_status": "confirmed",
+      "temporal_scope": "historical",
+      "materiality": "supporting",
+      "as_of": "2021-06-01",
       "source_ids": ["S02"]
     }
   ],
@@ -36,9 +51,12 @@ Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`.
       "items": [
         {
           "label": "客户问题",
-          "text": "……",
+          "text": "现有方案在功耗与部署密度之间存在权衡。",
           "evidence_status": "analysis",
-          "source_ids": ["S01", "S04"]
+          "temporal_scope": "current",
+          "materiality": "supporting",
+          "as_of": "2026-08-10",
+          "source_ids": ["S01", "S02"]
         }
       ]
     }
@@ -72,25 +90,78 @@ Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`.
       "title": "公司官网产品页",
       "publisher": "示例科技",
       "url": "https://example.com/product",
-      "published_at": "2026-06-01",
-      "accessed_at": "2026-08-06",
+      "published_at": "2026-07-01",
+      "accessed_at": "2026-08-10",
       "type": "公司官网",
+      "authority": "company_primary",
+      "access_status": "opened",
+      "freshness": "current",
       "note": "产品定位与参数；属于公司自述"
+    },
+    {
+      "id": "S02",
+      "title": "客户验证公告",
+      "publisher": "示例客户",
+      "url": "https://customer.example.com/news/validation",
+      "published_at": "2026-08-01",
+      "accessed_at": "2026-08-10",
+      "type": "客户公告",
+      "authority": "counterparty",
+      "access_status": "opened",
+      "freshness": "current",
+      "note": "客户确认验证阶段，但未披露采购金额"
     }
   ]
 }
 ```
 
-## Required rules
+The abbreviated example shows one topic and one question for readability. Production input must still contain exactly 3 topics and 5 questions.
 
+## Required top-level rules
+
+- `schema_version` must equal `2`.
 - `meta.company_name`, `meta.research_date`, and `meta.information_cutoff` must be non-empty.
-- `executive_summary`, `profile`, `sections`, `unknowns`, and `sources` are arrays. They may be short but must not contain placeholders.
-- `talk_topics` must contain exactly 3 objects.
-- `key_questions` must contain exactly 5 objects.
-- Every cited ID must exist in `sources`.
-- Use only `confirmed`, `company_claim`, `analysis`, or `unverified` for `evidence_status`.
-- Use ISO dates where possible. If a publication date is unknown, use an empty string and explain in `note`.
-- Use the final underlying `http` or `https` URL. Do not use a search-results URL.
+- Dates use ISO `YYYY-MM-DD`. Future research, cutoff, access, publication, or claim dates are rejected.
+- `information_cutoff` cannot be later than `research_date`.
+- The renderer rejects research older than 7 days by default. Change the limit with `--max-research-age-days`; use `--allow-stale-research` only for an explicitly historical re-render.
+- `verification.recent_search_completed` and `verification.identity_cross_checked` must be `true`.
+- `verification.critical_claims_cross_checked` must exactly equal the count independently computed by the renderer.
+- `verification.limitations` is an array of explicit research limitations. If fewer than 3 critical claims are cross-checked, at least one limitation is required.
+- `executive_summary`, `profile`, `sections`, `unknowns`, and `sources` are arrays and must not contain placeholders.
+- `talk_topics` contains exactly 3 objects; `key_questions` contains exactly 5 objects.
+
+## Claim rules
+
+Every object in `executive_summary`, `profile`, and `sections[].items` includes:
+
+- `evidence_status`: `confirmed`, `company_claim`, `analysis`, or `unverified`;
+- `temporal_scope`: `current`, `historical`, or `timeless`;
+- `materiality`: `critical` or `supporting`;
+- `as_of`: ISO date no later than `information_cutoff`;
+- `source_ids`: an array of IDs that exist in `sources`.
+
+Validation rules:
+
+- `confirmed` requires at least one opened independent or authoritative source. Company-only, aggregator-only, weak, snippet-only, or inaccessible evidence cannot be confirmed.
+- `company_claim` requires an opened `company_primary` source.
+- `analysis` requires opened source inputs; critical analysis requires at least two opened sources.
+- A non-unverified `current` claim requires at least one opened source marked `current`.
+- A critical confirmed claim requires at least two opened sources from different publishers. If it is current, both must be marked `current`.
+- `unverified` may have no source or may cite snippet-only/inaccessible leads.
+- Keep claims atomic. Do not embed Markdown or HTML in values.
+
+## Source rules
+
+Every source includes:
+
+- `authority`: `official_record`, `technical_primary`, `company_primary`, `counterparty`, `reputable_media`, `aggregator`, or `weak`;
+- `access_status`: `opened`, `snippet_only`, or `inaccessible`;
+- `freshness`: `current`, `historical`, `stale`, or `unknown`;
+- `published_at`: ISO date or an empty string when unknown, with the missing date explained in `note`;
+- `accessed_at`: ISO date from the current research run;
+- a final underlying `http` or `https` URL, never a search-results URL.
+
+Only an `opened` source may be marked `current`, `historical`, or `stale`. Snippet-only and inaccessible sources must use `unknown`.
 
 ## Recommended sections
 
@@ -101,5 +172,3 @@ Use four or five sections according to available evidence:
 3. `工程化与商业化进展`
 4. `团队、融资与组织信号`
 5. `竞争位置与初步判断`
-
-Keep claims atomic: one claim, one evidence status, and the relevant source IDs. Avoid embedding Markdown or HTML in any value; the renderer escapes all text.
