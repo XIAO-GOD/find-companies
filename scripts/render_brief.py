@@ -533,7 +533,7 @@ footer{{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}}
 <body><main class="page">
 <header class="hero"><div class="eyebrow">Hard-tech company visit brief</div><h1>{company}</h1><div class="subtitle">{subtitle}</div><div class="meta"><span>研究日期：{esc(meta['research_date'])}</span><span>信息截止：{esc(meta['information_cutoff'])}</span></div>{identity_html}</header>
 {audit_html}
-<section><h2>先看结论</h2><ul class="claim-list">{summary_html}</ul><div class="legend"><span class="badge confirmed">已证实</span><span class="badge claim">公司自述</span><span class="badge analysis">分析判断</span><span class="badge unverified">未确认</span></div></section>
+<section><h2>概括</h2><ul class="claim-list">{summary_html}</ul><div class="legend"><span class="badge confirmed">已证实</span><span class="badge claim">公司自述</span><span class="badge analysis">分析判断</span><span class="badge unverified">未确认</span></div></section>
 <section><h2>公司画像</h2><div class="table-wrap"><table><tbody>{''.join(profile_rows)}</tbody></table></div></section>
 {''.join(sections_html)}
 {unknowns_section}

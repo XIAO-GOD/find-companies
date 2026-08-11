@@ -164,6 +164,8 @@ class EvidenceGateTests(unittest.TestCase):
         output = render(data)
         self.assertIn("证据与新鲜度审计", output)
         self.assertIn("交叉核验关键判断", output)
+        self.assertIn("<h2>概括</h2>", output)
+        self.assertNotIn("先看结论", output)
 
     def test_old_schema_is_rejected(self) -> None:
         data = valid_data()
