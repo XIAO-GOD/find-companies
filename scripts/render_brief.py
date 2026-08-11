@@ -538,7 +538,7 @@ footer{{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}}
 {''.join(sections_html)}
 {unknowns_section}
 <section><h2>3个话题</h2><div class="cards">{''.join(topics_html)}</div></section>
-<section><h2>要问公司的 5 个关键问题</h2><div class="questions">{''.join(questions_html)}</div></section>
+<section><h2>5个问题</h2><div class="questions">{''.join(questions_html)}</div></section>
 <section><h2>公开来源</h2><ol class="sources">{''.join(sources_html)}</ol></section>
 <footer>本材料基于截至所示日期可访问的公开信息，用于初步拜访准备，不构成完整尽调、估值或法律意见。</footer>
 </main></body></html>'''

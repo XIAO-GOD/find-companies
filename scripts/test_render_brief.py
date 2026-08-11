@@ -168,6 +168,8 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertNotIn("先看结论", output)
         self.assertIn("<h2>3个话题</h2>", output)
         self.assertNotIn("建议聊的 3 个话题", output)
+        self.assertIn("<h2>5个问题</h2>", output)
+        self.assertNotIn("要问公司的 5 个关键问题", output)
 
     def test_old_schema_is_rejected(self) -> None:
         data = valid_data()
