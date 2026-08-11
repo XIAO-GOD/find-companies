@@ -170,6 +170,9 @@ class EvidenceGateTests(unittest.TestCase):
         self.assertNotIn("建议聊的 3 个话题", output)
         self.assertIn("<h2>5个问题</h2>", output)
         self.assertNotIn("要问公司的 5 个关键问题", output)
+        self.assertIn("--green:#1f8f5f", output)
+        self.assertIn("linear-gradient(135deg,#287f57 0%,#319b67 58%,#45ae78 100%)", output)
+        self.assertNotIn("background:var(--ink);color:#fff;border-radius:24px", output)
 
     def test_old_schema_is_rejected(self) -> None:
         data = valid_data()
