@@ -1,13 +1,13 @@
 ---
 name: prepare-hardtech-company-visit
-description: Research a named hard-technology company from current public web sources and create an evidence-gated, source-linked Chinese HTML briefing for an investor's first visit. Verifies company identity, checks information freshness, separates confirmed facts from company claims and analysis, exposes contradictions and unknowns, and outputs exactly 3 tailored conversation topics plus exactly 5 critical questions. Use for 公司拜访准备、初访公司、公司画像、全网搜索公司、最新情况、聊什么、问什么 or 生成拜访HTML across semiconductors, advanced manufacturing, new materials, robotics, AI infrastructure, aerospace, quantum, energy, biotech tools, and other hard-tech sectors. Do not use for full due diligence, valuation modeling, or legal opinions unless separately requested.
+description: Research a named hard-technology company and its founders from current public web sources, then create an evidence-gated, source-linked Chinese HTML briefing for an investor's first visit. Performs a mandatory founder deep dive placed first in the report, verifies company and founder identity, checks information freshness, separates confirmed facts from company claims and analysis, exposes contradictions and unknowns, and outputs exactly 3 tailored conversation topics plus exactly 5 critical questions. Use for 公司拜访准备、初访公司、创始人深搜、创始人画像、公司画像、全网搜索公司、最新情况、聊什么、问什么 or 生成拜访HTML across semiconductors, advanced manufacturing, new materials, robotics, AI infrastructure, aerospace, quantum, energy, biotech tools, and other hard-tech sectors. Do not use for full due diligence, valuation modeling, background investigation of private life, or legal opinions unless separately requested.
 ---
 
 # Prepare a Hard-Tech Company Visit
 
 ## Goal
 
-Turn current public-source research into a compact first-visit briefing without presenting model memory, stale publicity, or search snippets as facts. Help the investor understand what the company does, whether it merits continued attention, and what to learn next. Keep the meeting exploratory rather than interrogative.
+Turn current public-source research into a compact first-visit briefing without presenting model memory, stale publicity, or search snippets as facts. Make the founders' identity, track record, technical credibility, execution signals, public views, and unresolved risks the first substantive section. Help the investor understand what the company does, whether it merits continued attention, and what to learn next. Keep the meeting exploratory rather than interrogative.
 
 ## Inputs and defaults
 
@@ -38,13 +38,28 @@ Establish the brand name, legal name, aliases, headquarters, founding year, offi
 
 Record identity uncertainty explicitly. Never merge facts from two entities because their names are similar.
 
-### 3. Conduct broad public-source research
+### 3. Perform mandatory founder deep research
+
+Identify each disclosed founder and current role before attributing a biography. Search Chinese and English name variants together with the company, prior employers, schools, laboratories, papers, patents, conference biographies, interviews, earlier ventures, investor announcements, official records, and recent role changes. Read the founder protocol in [references/research-guide.md](references/research-guide.md).
+
+Cover six dimensions even when evidence is sparse:
+
+1. founder identity and current role;
+2. education and career timeline;
+3. technical track record, including papers, patents, projects, or products;
+4. entrepreneurship, organization building, financing, and commercialization execution;
+5. dated public views on technology, customers, strategy, or milestones;
+6. identity conflicts, unexplained timeline gaps, role changes, or material public-record risks.
+
+Treat namesakes as a primary risk. Require affiliation or another independent identifier before linking a paper, patent, award, or former role to a founder. Do not collect or publish private contact details, family information, home addresses, identity numbers, gossip, or unsupported allegations. If a dimension cannot be verified, state the failed search and turn it into a meeting check instead of filling the gap.
+
+### 4. Conduct broad public-source research
 
 Read [references/research-guide.md](references/research-guide.md) before searching. Cover identity, product and technology, team, financing, customers and commercialization, intellectual property or papers, production and recruiting signals, competition, and material negative signals.
 
 Use the best available web search and page-reading tools. Run both broad discovery queries and date-bounded “latest/current” queries. Open the underlying page for every cited material claim. Model memory, search-result snippets, cached previews, and an inaccessible URL are leads only. If network research tools are unavailable, state the limitation and do not fabricate a briefing.
 
-### 4. Lock the time scope and verify freshness
+### 5. Lock the time scope and verify freshness
 
 Follow [references/research-guide.md](references/research-guide.md) for freshness windows, source authority, contradiction handling, and the reverse claim audit.
 
@@ -53,7 +68,7 @@ Follow [references/research-guide.md](references/research-guide.md) for freshnes
 - Mark older but valid event records as `historical`; never use them alone to describe the current state.
 - If a current claim cannot be supported by an opened current source, downgrade it to `unverified` or attribute it as `company_claim`.
 
-### 5. Build an evidence ledger
+### 6. Build an evidence ledger
 
 For every material claim, store source IDs and one evidence status:
 
@@ -66,7 +81,7 @@ Also record every claim's `temporal_scope`, `materiality`, and `as_of` date. For
 
 Never label a claim `confirmed` when it is supported only by the company, a search snippet, an inaccessible page, an aggregator, or an undated repost. Treat numerical calculations as `analysis`, show the inputs and formula, and cite the input sources.
 
-### 6. Synthesize for an initial visit
+### 7. Synthesize for an initial visit
 
 Keep the visible narrative concise even when the search was detailed. Prioritize:
 
@@ -81,7 +96,7 @@ Keep the visible narrative concise even when the search was detailed. Prioritize
 
 Do not confuse customer contact with testing, testing with validation, a framework agreement with an order, first delivery with repeatability, or technical feasibility with a sellable product.
 
-### 7. Select exactly three conversation topics
+### 8. Select exactly three conversation topics
 
 Make each topic specific to this company and suitable for a collaborative founder conversation. Across the three topics, normally cover:
 
@@ -91,7 +106,7 @@ Make each topic specific to this company and suitable for a collaborative founde
 
 For each topic provide: why it matters, a natural opening line, and what to listen for. Prefer topics that expose causal logic, not generic requests to “introduce the technology.”
 
-### 8. Write exactly five critical questions
+### 9. Write exactly five critical questions
 
 Tailor questions to the largest information gaps. Collectively test:
 
@@ -103,7 +118,7 @@ Tailor questions to the largest information gaps. Collectively test:
 
 For each question include its purpose, a positive signal, and a red flag. Phrase questions conversationally and avoid an interrogation tone.
 
-### 9. Run the reverse claim audit
+### 10. Run the reverse claim audit
 
 Before rendering, inspect every visible sentence from conclusion back to source:
 
@@ -115,7 +130,7 @@ Before rendering, inspect every visible sentence from conclusion back to source:
 
 Rewrite, downgrade, or remove any sentence that fails this audit. A shorter report with explicit unknowns is preferable to a complete-looking report with invented connective tissue.
 
-### 10. Generate the HTML
+### 11. Generate the HTML
 
 Read [references/output-schema.md](references/output-schema.md). Create a UTF-8 JSON file matching the schema, then run:
 
@@ -128,6 +143,8 @@ The renderer rejects stale research by default, invalid dates, search-result URL
 Open the generated HTML or inspect it in a browser/rendering tool when available. Verify:
 
 - company identity and research date are visible;
+- `创始人深度画像（重点）` is the first substantive section immediately after the cover;
+- all six founder dimensions are present and each founder claim is evidence-labeled and cited or explicitly unverified;
 - every material claim has the correct evidence badge and source link;
 - all links work syntactically and no HTML is injected from source text;
 - layout is readable on desktop, mobile, and print;
@@ -140,6 +157,7 @@ Open the generated HTML or inspect it in a browser/rendering tool when available
 - Prefer 8–15 useful sources across at least 4 source categories when public information permits; never pad the list.
 - Prefer original or primary sources. Use aggregators as discovery aids and label paywalled or snippet-only evidence as weak.
 - Put research date, information cutoff, evidence audit, and limitations at the top.
+- Put the founder deep dive before the evidence audit, summary, and company profile; do not bury it inside the general team section.
 - Cross-check each critical confirmed claim with at least two opened current sources from different publishers; otherwise downgrade it.
 - Treat absence of search results as “not found in this search,” never as proof that an event, customer, dispute, or risk does not exist.
 - Make unknowns visible instead of filling gaps with inference.
@@ -152,3 +170,4 @@ Open the generated HTML or inspect it in a browser/rendering tool when available
 - [references/output-schema.md](references/output-schema.md): versioned JSON contract and evidence/freshness fields.
 - `scripts/render_brief.py`: enforces evidence and recency gates and creates a self-contained HTML report.
 - `scripts/test_render_brief.py`: regression tests for hallucination and stale-information failure modes.
+

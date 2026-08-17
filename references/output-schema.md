@@ -1,12 +1,12 @@
 # HTML renderer data contract
 
-Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`. Schema version 2 adds deterministic evidence and freshness gates.
+Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`. Schema version 3 retains the deterministic evidence and freshness gates and adds a mandatory, first-position founder deep dive.
 
 ## Top-level shape
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "meta": {
     "company_name": "示例科技",
     "legal_name": "示例科技有限公司",
@@ -21,6 +21,36 @@ Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`. Schema vers
     "critical_claims_cross_checked": 1,
     "limitations": [
       "公开信息不足以交叉验证三个关键现状判断，未验证内容已降级展示"
+    ]
+  },
+  "founder_deep_dive": {
+    "search_completed": true,
+    "limitations": [
+      "未找到可独立核验的完整履历，已将缺口转为现场问题"
+    ],
+    "items": [
+      {
+        "person": "张三",
+        "dimension": "identity_current_role",
+        "label": "身份与现任角色",
+        "text": "公司官网称张三为创始人兼CEO。",
+        "evidence_status": "company_claim",
+        "temporal_scope": "current",
+        "materiality": "critical",
+        "as_of": "2026-08-10",
+        "source_ids": ["S01"]
+      },
+      {
+        "person": "张三",
+        "dimension": "education_career",
+        "label": "教育与职业履历",
+        "text": "公开来源未形成可连续核验的教育与任职时间线。",
+        "evidence_status": "unverified",
+        "temporal_scope": "current",
+        "materiality": "supporting",
+        "as_of": "2026-08-10",
+        "source_ids": []
+      }
     ]
   },
   "executive_summary": [
@@ -115,11 +145,11 @@ Save one UTF-8 JSON object and pass it to `scripts/render_brief.py`. Schema vers
 }
 ```
 
-The abbreviated example shows one topic and one question for readability. Production input must still contain exactly 3 topics and 5 questions.
+The abbreviated founder example shows two dimensions for readability. Production input must cover all six founder dimensions and still contain exactly 3 topics and 5 questions.
 
 ## Required top-level rules
 
-- `schema_version` must equal `2`.
+- `schema_version` must equal `3`.
 - `meta.company_name`, `meta.research_date`, and `meta.information_cutoff` must be non-empty.
 - Dates use ISO `YYYY-MM-DD`. Future research, cutoff, access, publication, or claim dates are rejected.
 - `information_cutoff` cannot be later than `research_date`.
@@ -127,12 +157,15 @@ The abbreviated example shows one topic and one question for readability. Produc
 - `verification.recent_search_completed` and `verification.identity_cross_checked` must be `true`.
 - `verification.critical_claims_cross_checked` must exactly equal the count independently computed by the renderer.
 - `verification.limitations` is an array of explicit research limitations. If fewer than 3 critical claims are cross-checked, at least one limitation is required.
+- `founder_deep_dive` is required. `search_completed` must be `true`; `limitations` and `items` are arrays.
+- `founder_deep_dive.items` must contain at least six evidence-audited claims and collectively cover exactly these required dimensions: `identity_current_role`, `education_career`, `technical_track_record`, `entrepreneurship_execution`, `public_views`, and `integrity_risk`.
+- Every founder item includes non-empty `person`, `dimension`, `label`, and `text`, plus all ordinary claim fields. Use `unverified` with an explicit search gap when a dimension has no reliable public evidence.
 - `executive_summary`, `profile`, `sections`, `unknowns`, and `sources` are arrays and must not contain placeholders.
 - `talk_topics` contains exactly 3 objects; `key_questions` contains exactly 5 objects.
 
 ## Claim rules
 
-Every object in `executive_summary`, `profile`, and `sections[].items` includes:
+Every object in `founder_deep_dive.items`, `executive_summary`, `profile`, and `sections[].items` includes:
 
 - `evidence_status`: `confirmed`, `company_claim`, `analysis`, or `unverified`;
 - `temporal_scope`: `current`, `historical`, or `timeless`;
@@ -165,10 +198,11 @@ Only an `opened` source may be marked `current`, `historical`, or `stale`. Snipp
 
 ## Recommended sections
 
-Use four or five sections according to available evidence:
+The renderer always places `创始人深度画像（重点）` immediately after the cover and before the evidence audit and summary. Then use four or five company sections according to available evidence:
 
 1. `公司在解决什么问题`
 2. `核心产品与技术`
 3. `工程化与商业化进展`
 4. `团队、融资与组织信号`
 5. `竞争位置与初步判断`
+

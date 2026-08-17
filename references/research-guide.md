@@ -67,6 +67,21 @@ Read the system date before searching and use it as `research_date`. For every c
 | Competition | current competing products and substitute routes, not only historical market reports |
 | Risks | recent regulator, court, recall, penalty, dispute, or delay searches |
 
+## Mandatory founder deep-search protocol
+
+Research every publicly disclosed founder as a separate identity-resolution task. Do not transfer a biography, paper, patent, award, or former role from a namesake merely because the name matches.
+
+1. Establish the founder's name variants, current company role, and at least one affiliation-linked identifier.
+2. Build a dated education and career timeline from institutional biographies, employer pages, papers, patents, conference materials, investor announcements, or attributed interviews.
+3. Search technical track record by combining the person's name with affiliation, coauthors, technical keywords, paper databases, patent portals, laboratories, product names, and standards bodies.
+4. Search execution history: earlier ventures, team building, product delivery, financing participation, hiring, customer-facing work, and disclosed milestones. Attribute company publicity as `company_claim` unless independently confirmed.
+5. Search dated public views and compare stated milestones with later disclosed outcomes. Do not treat confidence, ambition, or media fluency as execution proof.
+6. Search recent role changes and material official-record risks. Report only decision-relevant public professional information; exclude private contact details, family, home address, identity numbers, gossip, and unsupported misconduct allegations.
+
+Cover these exact dimensions in the evidence ledger: `identity_current_role`, `education_career`, `technical_track_record`, `entrepreneurship_execution`, `public_views`, and `integrity_risk`. When public evidence is absent, write an `unverified` item that identifies the gap and the searches attempted. A negative search means “not found in this run,” not “does not exist.”
+
+For people with common names, require affiliation, coauthor network, email domain, patent applicant, conference employer, or another independent identifier before attribution. If identity remains ambiguous, keep the item `unverified` and ask for a CV, publication list, patent list, or employment timeline during the visit.
+
 Before finishing, run one final “company name + latest/current year” search to detect announcements published after the initial source set.
 
 ## Search matrix
@@ -77,6 +92,11 @@ Before finishing, run one final “company name + latest/current year” search 
 | Product | 公司名 产品 / 型号 / 参数 / 手册 / 发布 / 解决方案 / 当前年份 |
 | Technology | 公司名 技术路线 / 专利 / 论文 / 测试 / 认证 / 标准 / benchmark |
 | Team | 公司名 创始人 / 首席科学家 / 核心团队 / 离职 / 加入 / 当前年份 |
+| Founder identity | 创始人姓名 + 公司 / 英文名 / 现任 / 曾任 / 加入 / 离职 / 当前年份 |
+| Founder education and career | 创始人姓名 + 学校 / 院系 / 实验室 / 导师 / 任职机构 / conference bio |
+| Founder technical record | 创始人姓名 + 机构 + 论文 / 专利 / 标准 / 项目 / 产品 / Google Scholar / ORCID |
+| Founder execution and views | 创始人姓名 + 创业 / 融资 / 交付 / 客户 / 招聘 / 演讲 / 专访 / 路线图 |
+| Founder risk | 创始人姓名 + 变更 / 离职 / 诉讼 / 处罚 / 失信 / 争议；仅使用可核验公共职业信息 |
 | Financing | 公司名 融资 / 投资方 / 轮次 / 金额 / 工商变更 / 当前年份 |
 | Customers | 公司名 客户 / 中标 / 采购 / 验证 / 交付 / 定点 / 合作 |
 | Capacity | 公司名 产线 / 扩产 / 基地 / 良率 / 产能 / 招聘 / 售后 |
@@ -135,6 +155,7 @@ Attempt each item; mark unavailable items as unknown rather than omitting them s
 - Prototype, validation, delivery, or scale stage
 - One concrete customer or partner journey, if publicly available
 - Founders and current role coverage relevant to execution
+- Six-dimension founder deep dive with namesake checks and explicit attribution limits
 - Latest disclosed financing history and current round, if any
 - Principal competitors and substitute routes
 - Intellectual-property, paper, certification, or standards evidence
@@ -148,3 +169,4 @@ Use the causal chain:
 `technical indicator → stable product → customer validation → procurement reason → repeatable delivery → defensibility → next financing milestone`
 
 Identify where the chain is supported, where it breaks, and what evidence would repair it. Select topics and questions from the weakest consequential links. When information is sparse, produce a shorter report with stronger unknowns. When information is abundant, compress repeated publicity and retain only decision-relevant evidence.
+

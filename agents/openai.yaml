@@ -1,4 +1,5 @@
 interface:
   display_name: "硬科技公司拜访准备"
-  short_description: "深搜硬科技公司并强制证据、新鲜度核验，生成初访HTML"
-  default_prompt: "使用 $prepare-hardtech-company-visit 核验一家硬科技公司的最新公开信息，生成带证据审计的初访 HTML、3 个交流话题和 5 个关键问题。"
+  short_description: "深搜硬科技公司及创始人，强制证据与新鲜度核验，生成初访HTML"
+  default_prompt: "使用 $prepare-hardtech-company-visit 核验一家硬科技公司及其创始人的最新公开信息，把创始人深度画像置于报告最前，生成带证据审计的初访 HTML、3 个交流话题和 5 个关键问题。"
+

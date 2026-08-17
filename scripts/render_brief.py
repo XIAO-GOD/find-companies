@@ -45,6 +45,14 @@ FRESHNESS_LABELS = {
 
 TEMPORAL_SCOPES = {"current", "historical", "timeless"}
 MATERIALITIES = {"critical", "supporting"}
+FOUNDER_DIMENSIONS = {
+    "identity_current_role": "身份与现任角色",
+    "education_career": "教育与职业履历",
+    "technical_track_record": "技术积累与成果",
+    "entrepreneurship_execution": "创业与执行能力",
+    "public_views": "公开观点与战略取向",
+    "integrity_risk": "待核验事项与公共记录风险",
+}
 STRONG_AUTHORITIES = {
     "official_record",
     "technical_primary",
@@ -143,8 +151,8 @@ def validate(
 ) -> dict[str, Any]:
     if not isinstance(data, dict):
         fail("root must be an object")
-    if data.get("schema_version") != 2:
-        fail("schema_version must equal 2; migrate the evidence ledger before rendering")
+    if data.get("schema_version") != 3:
+        fail("schema_version must equal 3; migrate the evidence ledger before rendering")
     if max_research_age_days < 0:
         fail("max_research_age_days must be non-negative")
 
@@ -188,6 +196,22 @@ def validate(
     limitations = require_list(verification.get("limitations"), "verification.limitations")
     for index, limitation in enumerate(limitations):
         require_text(limitation, f"verification.limitations[{index}]")
+
+    founder_deep_dive = data.get("founder_deep_dive")
+    if not isinstance(founder_deep_dive, dict):
+        fail("founder_deep_dive must be an object")
+    if not require_bool(founder_deep_dive.get("search_completed"), "founder_deep_dive.search_completed"):
+        fail("founder_deep_dive.search_completed must be true")
+    founder_limitations = require_list(
+        founder_deep_dive.get("limitations"), "founder_deep_dive.limitations"
+    )
+    for index, limitation in enumerate(founder_limitations):
+        require_text(limitation, f"founder_deep_dive.limitations[{index}]")
+    founder_items = require_list(founder_deep_dive.get("items"), "founder_deep_dive.items")
+    if len(founder_items) < len(FOUNDER_DIMENSIONS):
+        fail(
+            "founder_deep_dive.items must contain at least six claims covering all founder dimensions"
+        )
 
     for key in ("executive_summary", "profile", "sections", "unknowns", "sources"):
         require_list(data.get(key), key)
@@ -309,6 +333,26 @@ def validate(
                 fail(f"{path}: a critical {status} claim requires two eligible sources from different publishers")
             audited_cross_checks += 1
 
+    founder_dimensions_seen: set[str] = set()
+    for index, item in enumerate(founder_items):
+        path = f"founder_deep_dive.items[{index}]"
+        if not isinstance(item, dict):
+            fail(f"{path} must be an object")
+        require_text(item.get("person"), f"{path}.person")
+        require_text(item.get("label"), f"{path}.label")
+        require_text(item.get("text"), f"{path}.text")
+        dimension = item.get("dimension")
+        if dimension not in FOUNDER_DIMENSIONS:
+            fail(f"{path}.dimension must be one of {', '.join(FOUNDER_DIMENSIONS)}")
+        founder_dimensions_seen.add(dimension)
+        check_claim(item, path)
+    missing_founder_dimensions = set(FOUNDER_DIMENSIONS) - founder_dimensions_seen
+    if missing_founder_dimensions:
+        fail(
+            "founder_deep_dive.items is missing dimensions: "
+            + ", ".join(sorted(missing_founder_dimensions))
+        )
+
     for index, claim in enumerate(data["executive_summary"]):
         require_text(claim.get("text") if isinstance(claim, dict) else None, f"executive_summary[{index}].text")
         check_claim(claim, f"executive_summary[{index}]")
@@ -401,6 +445,32 @@ def render(data: dict[str, Any]) -> str:
     subtitle = " · ".join(subtitle_bits)
 
     summary_html = "".join(render_claim(item, show_label=False) for item in data["executive_summary"])
+
+    founder_groups: dict[str, list[dict[str, Any]]] = {}
+    for item in data["founder_deep_dive"]["items"]:
+        founder_groups.setdefault(item["person"], []).append(item)
+    founder_cards = []
+    for person, items in founder_groups.items():
+        claims = "".join(render_claim(item) for item in items)
+        founder_cards.append(
+            '<article class="founder-card">'
+            f'<h3>{esc(person)}</h3><ul class="claim-list">{claims}</ul>'
+            '</article>'
+        )
+    founder_limitations = data["founder_deep_dive"]["limitations"]
+    founder_limitations_html = "".join(f'<li>{esc(item)}</li>' for item in founder_limitations)
+    founder_limitations_block = (
+        '<div class="founder-limitations"><b>创始人研究限制</b><ul>'
+        f'{founder_limitations_html}</ul></div>'
+        if founder_limitations
+        else ""
+    )
+    founder_html = (
+        '<section class="founder-priority"><div class="priority-kicker">FIRST · 核心人物判断</div>'
+        '<h2>创始人深度画像（重点）</h2>'
+        '<p class="section-summary">身份、履历、技术积累、创业执行、公开观点与待核验风险均按证据等级展示。</p>'
+        f'<div class="founder-grid">{"".join(founder_cards)}</div>{founder_limitations_block}</section>'
+    )
 
     profile_rows = []
     for item in data["profile"]:
@@ -519,6 +589,7 @@ a{{color:var(--green);text-decoration:none}} a:hover{{text-decoration:underline}
 .eyebrow{{font-size:13px;letter-spacing:.14em;color:#daf7e5;text-transform:uppercase}} h1{{font-size:42px;line-height:1.18;margin:12px 0 8px}} .subtitle{{color:#f0faf4;font-size:16px}} .meta{{display:flex;gap:16px;flex-wrap:wrap;margin-top:24px;color:#e8f7ee;font-size:13px}} .identity-note{{margin:14px 0 0;color:#d9eee2;font-size:13px}}
 section{{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;margin-top:18px;box-shadow:0 8px 30px rgba(31,143,95,.055)}} h2{{font-size:22px;margin:0 0 16px;color:var(--green-strong)}} h3{{font-size:17px;margin:0 0 10px;color:var(--green-strong)}} .section-summary{{color:var(--muted);margin:-6px 0 18px}}
 .audit-panel{{border-color:#b7dcc7;background:#f7fcf8}} .audit-grid{{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}} .audit-grid div{{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}} .audit-grid b{{font-size:20px;display:block;color:var(--green-strong)}} .audit-grid span{{font-size:12px;color:var(--muted)}} .limitations{{margin-top:16px;color:#4d6357;font-size:13px}} .limitations ul{{margin:6px 0 0;padding-left:20px}}
+.founder-priority{{border:2px solid #69c28d;background:linear-gradient(145deg,#f4fcf7 0%,#ffffff 72%);box-shadow:0 12px 34px rgba(31,143,95,.11);position:relative}} .founder-priority:before{{content:"";position:absolute;left:28px;right:28px;top:0;height:5px;background:linear-gradient(90deg,#36a66f,#65c98f,#9ae7b5);border-radius:0 0 6px 6px}} .priority-kicker{{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--green);margin-bottom:6px}} .founder-grid{{display:grid;gap:14px}} .founder-card{{border:1px solid #cbe8d6;border-radius:14px;padding:18px;background:#fff}} .founder-card h3{{font-size:20px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}} .founder-limitations{{margin-top:14px;padding:14px 16px;border-radius:12px;background:#edf8f1;color:#4d6357;font-size:13px}} .founder-limitations ul{{margin:6px 0 0;padding-left:20px}}
 .claim-list{{list-style:none;padding:0;margin:0;display:grid;gap:12px}} .claim-item{{border-top:1px solid var(--line);padding-top:13px}} .claim-item:first-child{{border-top:0;padding-top:0}} .claim-head{{display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap}} .claim-label{{font-size:14px}} .claim-text{{color:#29352f}}
 .badge{{font-size:11px;line-height:1;padding:5px 7px;border-radius:999px;white-space:nowrap}} .confirmed{{color:var(--green-strong);background:var(--green2)}} .badge.claim{{color:var(--amber);background:var(--amber2)}} .analysis{{color:var(--blue);background:var(--blue2)}} .unverified{{color:var(--red);background:var(--red2)}} .mini-badge{{font-size:10px;border:1px solid #8bc8a8;color:var(--green-strong);padding:2px 6px;border-radius:999px}} .as-of{{font-size:11px;color:var(--muted)}} .cite{{font-size:11px;margin-left:3px;vertical-align:super}}
 .table-wrap{{overflow-x:auto}} table{{width:100%;border-collapse:collapse;font-size:14px}} th,td{{padding:12px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}} th{{color:var(--muted);font-weight:600}} tbody tr:last-child th,tbody tr:last-child td{{border-bottom:0}}
@@ -532,6 +603,7 @@ footer{{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}}
 </head>
 <body><main class="page">
 <header class="hero"><div class="eyebrow">Hard-tech company visit brief</div><h1>{company}</h1><div class="subtitle">{subtitle}</div><div class="meta"><span>研究日期：{esc(meta['research_date'])}</span><span>信息截止：{esc(meta['information_cutoff'])}</span></div>{identity_html}</header>
+{founder_html}
 {audit_html}
 <section><h2>概括</h2><ul class="claim-list">{summary_html}</ul><div class="legend"><span class="badge confirmed">已证实</span><span class="badge claim">公司自述</span><span class="badge analysis">分析判断</span><span class="badge unverified">未确认</span></div></section>
 <section><h2>公司画像</h2><div class="table-wrap"><table><tbody>{''.join(profile_rows)}</tbody></table></div></section>
@@ -581,3 +653,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -47,8 +47,44 @@ def valid_data() -> dict[str, object]:
         }
         for i in range(1, 6)
     ]
+    founder_dimensions = [
+        ("identity_current_role", "身份与现任角色"),
+        ("education_career", "教育与职业履历"),
+        ("technical_track_record", "技术积累与成果"),
+        ("entrepreneurship_execution", "创业与执行能力"),
+        ("public_views", "公开观点与战略取向"),
+        ("integrity_risk", "待核验事项与公共记录风险"),
+    ]
+    founder_items = []
+    for dimension, label in founder_dimensions:
+        founder_items.append(
+            {
+                "person": "张三",
+                "dimension": dimension,
+                "label": label,
+                **claim(
+                    f"公司官网披露的创始人信息：{label}。",
+                    "company_claim",
+                    "current",
+                    "supporting",
+                    ["S01"],
+                ),
+            }
+        )
+    founder_items[0] = {
+        "person": "张三",
+        "dimension": "identity_current_role",
+        "label": "身份与现任角色",
+        **claim(
+            "公司与产业媒体均披露张三为创始人兼CEO。",
+            "confirmed",
+            "current",
+            "critical",
+            ["S01", "S03"],
+        ),
+    }
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "meta": {
             "company_name": "星云芯片",
             "legal_name": "星云芯片有限公司",
@@ -60,8 +96,13 @@ def valid_data() -> dict[str, object]:
         "verification": {
             "recent_search_completed": True,
             "identity_cross_checked": True,
-            "critical_claims_cross_checked": 3,
+            "critical_claims_cross_checked": 4,
             "limitations": [],
+        },
+        "founder_deep_dive": {
+            "search_completed": True,
+            "limitations": ["完整任职时间线仍需本人确认"],
+            "items": founder_items,
         },
         "executive_summary": [
             claim("产品处于客户验证阶段。", "confirmed", "current", "critical", ["S02", "S03"])
@@ -164,6 +205,9 @@ class EvidenceGateTests(unittest.TestCase):
         output = render(data)
         self.assertIn("证据与新鲜度审计", output)
         self.assertIn("交叉核验关键判断", output)
+        self.assertIn("创始人深度画像（重点）", output)
+        self.assertLess(output.index("创始人深度画像（重点）"), output.index("证据与新鲜度审计"))
+        self.assertLess(output.index("创始人深度画像（重点）"), output.index("<h2>概括</h2>"))
         self.assertIn("<h2>概括</h2>", output)
         self.assertNotIn("先看结论", output)
         self.assertIn("<h2>3个话题</h2>", output)
@@ -176,8 +220,20 @@ class EvidenceGateTests(unittest.TestCase):
 
     def test_old_schema_is_rejected(self) -> None:
         data = valid_data()
-        data.pop("schema_version")
+        data["schema_version"] = 2
         with self.assertRaisesRegex(ValueError, "schema_version"):
+            self.check(data)
+
+    def test_founder_deep_dive_is_required(self) -> None:
+        data = valid_data()
+        data.pop("founder_deep_dive")
+        with self.assertRaisesRegex(ValueError, "founder_deep_dive"):
+            self.check(data)
+
+    def test_all_founder_dimensions_are_required(self) -> None:
+        data = valid_data()
+        data["founder_deep_dive"]["items"].pop()
+        with self.assertRaisesRegex(ValueError, "at least six|missing dimensions"):
             self.check(data)
 
     def test_stale_research_is_rejected(self) -> None:
@@ -210,7 +266,7 @@ class EvidenceGateTests(unittest.TestCase):
         data["executive_summary"][0] = claim(
             "公司自称产品已量产。", "confirmed", "current", "supporting", ["S01"]
         )
-        data["verification"]["critical_claims_cross_checked"] = 2
+        data["verification"]["critical_claims_cross_checked"] = 3
         data["verification"]["limitations"] = ["一项关键判断仅有公司口径"]
         with self.assertRaisesRegex(ValueError, "company-only"):
             self.check(data)
@@ -224,7 +280,7 @@ class EvidenceGateTests(unittest.TestCase):
 
     def test_declared_cross_check_count_must_match(self) -> None:
         data = valid_data()
-        data["verification"]["critical_claims_cross_checked"] = 4
+        data["verification"]["critical_claims_cross_checked"] = 5
         with self.assertRaisesRegex(ValueError, "does not match"):
             self.check(data)
 
@@ -233,7 +289,7 @@ class EvidenceGateTests(unittest.TestCase):
         data["executive_summary"][0] = claim(
             "公司称产品处于客户验证阶段。", "company_claim", "current", "critical", ["S01"]
         )
-        data["verification"]["critical_claims_cross_checked"] = 2
+        data["verification"]["critical_claims_cross_checked"] = 3
         data["verification"]["limitations"] = ["客户验证阶段缺少两方独立确认"]
         self.check(data)
 
@@ -246,3 +302,4 @@ class EvidenceGateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
